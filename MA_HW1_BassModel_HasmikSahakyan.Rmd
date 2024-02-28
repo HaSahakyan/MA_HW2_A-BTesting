@@ -1,0 +1,181 @@
+---
+title: "MA_HW1_Bass Model"
+author: "Hasmik Sahakyan"
+date: "2024-02-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results=FALSE, echo=FALSE, warning=FALSE}
+#Loading nessesary libraries
+libs<-c('ggplot2','ggpubr','knitr','diffusion')
+ load_libraries<-function(libs){
+ new_libs <-libs[!(libs%in%installed.packages()[,"Package"])]
+ if(length(new_libs)>0){install.packages(new_libs)}
+ lapply(libs,library, character.only=TRUE)
+ }
+ load_libraries(libs)
+```
+# An inovation from 100 innovations of 2023
+
+I chose Nex Playground as an innovation, which is an Ultra-active Video Game. 
+
+
+# Look_alike innovation 
+
+Initially I decied to choose a board game as a look-alike innovation for the Nex Playground, however some reserach for the appropriate dataset made me change my mind and chose video games as a look-alike innovation.
+
+As a look-alike innovation I have chosen video games. Video games are widely used in society, offering immersive digital experiences that captivate players across various demographics. The innovation of Nex Playground, while maintaining the essence of gaming, introduces a novel physical component. It makes the playes to move and use this body to play. This merging of physical activity with gaming experiences is reminiscent of the evolution of motion-controlled gaming systems. This innovation gain wider usage, particularly among casual gamers and families, as it provided a more active and inclusive gaming experience.
+
+Nex Playground's incorporation of physical movement into gameplay aligns with the trend of gamification in various aspects of life, including fitness and education. By leveraging the familiarity and popularity of video games while encouraging physical activity, Nex Playground has the potential to attract a broad audience, including gamers looking for a more active experience and individuals seeking a fun way to exercise. Just as the Video games expanded the gaming market by appealing to new demographics, Nex Playground has the potential to tap into the growing demand for interactive and health-conscious entertainment options, thereby carving out its niche in the competitive landscape of gaming and fitness industries.
+
+
+# Time series data matching the look-alike innovation
+
+I tried to search a board game sales dataset. After some research I found some datasets, but they were not convenient for  our analysis because of lack of year diversity. Than I decide to search video game datasets and do the analysis using general the concept of video game not specifically picking one because a specific games did not have the time series component. After some research I found a video game sales dataset, which I thought is the most appropriate format for this homework. It had wide range of sales time and  filtered them from 2000 year to make it more relatable for our time. Dataset if from keggel and has some useful features such as game name, sales year, platform, genre of the game, publisher, sales in North America (in millions), sales in Europe (in millions), sales in Japan (in millions), total worldwide sales and etc. The ones that we will use is the year and total worldwide sales, however for the further analysis other features also can be helpful. 
+
+
+The following is our data: 
+
+```{r, echo=FALSE, warning=FALSE}
+# Reading the dataset
+data <- read.csv("vgsales.csv")
+
+# Removing rows with missing values in the 'Year' column
+data_filtered <- na.omit(data[data$Year != "N/A", ])
+
+# Filtering the data to include only rows with Year >= 2000 for more simple vizualization and data time relativity
+data_filtered <- subset(data_filtered, Year >= 2000)
+
+# Converting the 'Year' column to numeric (assuming it contains only numeric values)
+data$Year <- as.numeric(data$Year)
+
+# Aggregating the 'Global_Sales' by 'Year' to calculate sales volume for each year
+sales_volume <- aggregate(Global_Sales ~ Year, data_filtered, sum)
+
+# Displaying the sales volume table using the kable function
+kable(sales_volume)
+
+
+```
+
+```{r, echo=FALSE}
+# Creating a ggplot object 'sales' with data from 'sales_volume' dataframe
+sales <- ggplot(sales_volume, aes(x = Year, y = Global_Sales)) + geom_bar(stat='identity') +
+  labs(title = 'Yearly worldwide video game sales', y = 'Sales (in million)')
+print(sales)
+```
+
+Estimating Bass model parameters for the look-alike innovation, which are video games.
+
+```{r, echo=FALSE}
+# Estimating diffusion parameters using the diffusion function
+diff_m <- diffusion(sales_volume$Global_Sales)
+
+# Extracting diffusion parameters
+p = round(diff_m$w, 4)[1]  # Estimated coefficient of innovation
+q = round(diff_m$w, 4)[2]  # Estimated coefficient of imitation
+m = round(diff_m$w, 4)[3]  # Estimated market potential
+
+# Printing the diffusion parameters
+print(diff_m)
+```
+p is the coefficient of innovation, which is approximately 0.02. 
+
+q is the coefficient of imitation, which is 0.2874. 
+
+m is the market potential, which shows the total number of people that can buy the product. In our case it is aproximately 7612.2. 
+
+
+```{r, echo=FALSE}
+bass.f<-function(t,p,q){
+   ((p+q)**2/p)*exp(-(p+q)*t)/
+     (1+(q/p)*exp(-(p+q)*t))**2
+}
+# The bass.f function calculates the probability density function (pdf) of the Bass model.
+# This function takes three arguments:
+#   - t: time
+#   - p: coefficient representing the coefficient of innovation
+#   - q: coefficient representing the coefficient of imitation
+# It returns the probability density function value at time 't' based on the Bass model formula.
+
+
+bass.F<-function(t,p,q){
+   (1-exp(-(p+q)*t))/
+     (1+(q/p)*exp(-(p+q)*t))
+}
+# The bass.F function calculates the cumulative distribution function (cdf) of the Bass model.
+# This function takes three arguments:
+#   - t: time
+#   - p: coefficient representing the coefficient of innovation
+#   - q: coefficient representing the coefficient of imitation
+# It returns the cumulative distribution function value at time 't' based on the Bass model formula.
+
+```
+
+
+```{r, echo=FALSE}
+# Plotting for cumulative adoptions over time
+cum_ad=ggplot(data.frame(t=c(1,19)),aes(t))+
+  stat_function(fun=bass.F,args=c(p=0.0230,q=0.2874))+
+  labs(title= 'Video Games - cumulative adoptions')
+
+# Plotting for adoptions at a specific time
+time_ad=ggplot(data.frame(t=c(1,19)),aes(t))+
+  stat_function(fun=bass.f,args=c(p=0.0230, q=0.2874))+
+  labs(title= 'Video Games - adoptions at time t')
+
+ggarrange(cum_ad,time_ad)
+```
+
+```{r, echo=FALSE}
+time_ad =  ggplot(data.frame(t = c(1:19)), aes(t)) +
+  stat_function(fun = bass.f, args = c(p=0.0230,q=0.2874)) +
+  labs(title = 'f(t)')
+
+# Plotting for video games sales volume over the years
+sm_sales = ggplot(sales_volume, aes(x = Year, y = Global_Sales)) +
+  geom_bar(stat = 'identity') +
+  ggtitle('Video Games Sales in milions')
+
+ggarrange(time_ad, sm_sales)
+```
+Our estimation is good because it shows the main trand.
+
+
+
+
+
+# Making predictions of the diffusion of the innovation of Nex Playground.
+
+Multiplying f(t) by m to make a prediction.
+
+```{r, echo=FALSE}
+# Calculating sales prediction for each year using the bass model parameters we calculated in above.
+sales_volume$Pred_Sales=bass.f(1:19,p=0.0230, q=0.2874)*7612
+# Ploting the historical data using histogram and predicted data with red points for comparison
+ggplot(data =sales_volume, aes(x=Year,y=Global_Sales))+
+  geom_bar(stat= 'identity')+
+  geom_point(mapping=aes(x=Year,y=Pred_Sales),color= 'red')
+             
+```
+
+
+This prediction shows globbally close predictions to the sales trend, however it is not a very good prediction because the minor changes in the trend are not considered during the prediction, which is why in some years the red dots are not close to the peaks of the bars.
+ 
+ 
+ 
+# Estimating the number of adopters by period
+
+To estimate the number of adopters by period and then calculate the potential market share, we will use Fermi estimation techniques. Fermi estimation involves making rough, order-of-magnitude estimations based on reasonable assumptions and approximations. 
+There are 2.6 billion	people aged under 20 and 2.3 billion people aged between 20 and 39. Let's assume that our targeted ages are from 8 to 35. We will make a rough apromximation by considering that 65% of people from age 0 to 20 are older that 8, so we will compute the 65% of 2.6 billion, which will be 1.69 billion. And we will assume that 90% of people from age 20 to 39 are younger than 35, so the 90% of 2.3 billion will be 2.07 billion. If we sum up thos two numbers we will get 3.76 billion. We will consider that 20 percent to of the people are not interested in playing games and we will get approximately 3 billion. However, in the initial stage not all will be positiv towards this innovation and only 30 percent of them will adopt the product which is 0.9 billion.
+ 
+ 
+# Sources
+
+* TIME magazine. *Nex Playground, Ultra-active Video Games*. (2023). Retrieved from: https://time.com/collection/best-inventions-2023/6327702/nex-playground/
+* kaggle. *Video Game Sales*. Retrieved from: https://www.kaggle.com/datasets/gregorut/videogamesales?resource=download
+* Visual Capitalist. *Visualizing the World’s Population by Age Group*. Retrieved from: https://www.visualcapitalist.com/the-worlds-population-2020-by-age/
