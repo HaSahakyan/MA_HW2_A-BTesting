@@ -12,7 +12,7 @@ The simulation includes two popular algorithms for solving the MAB problem:
 
 ## Contents
 
-- `main.py`: The main script to run the MAB simulation.
+- `Bandit.py`: The main script to run the MAB simulation.
 - `logs.py`: Custom logging configuration.
 - `README.md`: This file, providing an overview and instructions.
 - `requirements.txt`: Required Python packages.
@@ -22,13 +22,9 @@ The simulation includes two popular algorithms for solving the MAB problem:
 
 1. **Setup**: Install the required Python packages by running `pip install -r requirements.txt`.
 
-2. **Run the Simulation**: Execute `main.py` to run the MAB simulation. The script compares the performance of Epsilon Greedy and Thompson Sampling algorithms over a specified number of trials.
+2. **Run the Simulation**: Execute `Bandit.py` to run the MAB simulation. The script compares the performance of Epsilon Greedy and Thompson Sampling algorithms over a specified number of trials.
 
 3. **Output**: The script produces visualizations comparing cumulative rewards and regrets of the two algorithms, as well as logging messages at different levels (debug, info, warning, error, critical).
 
-4. **Customization**: You can customize the parameters of the MAB simulation (e.g., number of arms, reward probabilities, epsilon value) by modifying the parameters in the `main.py` script.
 
-## References
 
-- [Wikipedia: Multi-armed bandit](https://en.wikipedia.org/wiki/Multi-armed_bandit)
-- [Thompson Sampling: An Introduction](https://towardsdatascience.com/hompson-sampling-an-introduction-b4d05adaf3e3)
